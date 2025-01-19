@@ -38,21 +38,24 @@ def fin_torque_rating_del_angle(fin, rocket, angle):
 
 def rank_angles(fin, rocket, prop):
     angle_scores = [(angle, fin_torque_rating_del_angle(fin, rocket, angle)) for angle in angles_check]
-    # print(angle_scores)
-    angle_scores_sorted = sorted(angle_scores, key=lambda x: x[1])
+    angle_scores_positive = []
+    for angle_pair in angle_scores:
+        if angle_pair[1] >= 0: angle_scores_positive.append(angle_pair)
+    angle_scores_sorted = sorted(angle_scores_positive, key=lambda x: x[1])
+    if len(angle_scores_sorted) == 0: angle_scores_sorted.append(sorted(angle_scores, key=lambda x: x[1])[ANGLE_SAMPLE_SIZE - 1])
     # print(angle_scores_sorted)
-    prop_int = np.rint((prop + 1)/2 * (ANGLE_SAMPLE_SIZE - 1)).astype(int)
-    print("Angle score sorted:" , angle_scores_sorted[prop_int])
-    print("the respective error" , error(fin, rocket))
+    prop_int = np.rint(error(fin, rocket) * (len(angle_scores_sorted)) - 1).astype(int)
+    print("prop_int = ", prop_int, "len(angle_scores_sorted) = ", len(angle_scores_sorted))
+    print("Error: " , error(fin, rocket))
+    print("rocket.vector.magnitude = ", np.linalg.norm(rocket.vector), "rocket.vector = ", rocket.vector)
+    print("Angle score sorted: ", angle_scores_sorted)
+    print("Angle score sorted at prop: " , angle_scores_sorted[prop_int])
     return angle_scores_sorted[prop_int]
 
 def error(fin, rocket):
-    theta = np.dot(rocket.vector, np.array([0,0,1]))
-    theta = 1 / (1 + np.exp(-theta))
-    cross_product = np.cross(rocket.vector, np.array([0,0,1]))
-    sign = np.sign(cross_product[1])
-
-    return sign * theta
+    dot = np.dot(rocket.vector, np.array([0,0,1]))
+    print("dot = ", dot)
+    return np.sqrt((1 - dot) / 2)
 
 
 
